@@ -55,14 +55,17 @@ describe Stepdown::Analyzer do
   
   describe "#process_feature_files" do
     it "should instantiate a bunch of stuff" do
-      double_listener = double(:listener)
       @analyzer.stub(:instance)
-      Stepdown::FeatureParser.should_receive(:new).with(anything).and_return(double_listener)
+
       double_parser = double(:gherkin_parser)
-      Gherkin::Parser::Parser.should_receive(:new).and_return(double_parser)
-      File.stub(:read)
+      Gherkin::Parser.should_receive(:new).and_return(double_parser)
       double_parser.should_receive(:parse)
-      double_listener.should_receive(:scenarios)
+
+      double_compiler = double(:gherkin_compiler)
+      Gherkin::Pickles::Compiler.should_receive(:new).and_return(double_compiler)
+      double_compiler.should_receive(:compile).and_return([])
+
+      File.should_receive(:read)
       @analyzer.process_feature_files(["blah.txt"])
     end
   end

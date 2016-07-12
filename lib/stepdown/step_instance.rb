@@ -1,11 +1,11 @@
 require 'stepdown/step_collection'
-require 'gherkin/i18n'
+require 'gherkin/dialect'
 
 module Stepdown
   class StepInstance
     def initialize
       @steps = []
-      Gherkin::I18n.code_keywords.each do |code|
+      code_keywords.each do |code|
         self.class.send(:alias_method, code, :define_step)
       end
     end
@@ -51,5 +51,16 @@ module Stepdown
       end
       @step_collection
     end
+
+    def code_keywords
+      dialect = Gherkin::Dialect.for('en')
+      keywords = dialect.given_keywords +
+           dialect.when_keywords +
+           dialect.then_keywords +
+           dialect.and_keywords +
+           dialect.but_keywords
+      keywords.map(&:strip).uniq - ['*']
+    end
+
   end
 end

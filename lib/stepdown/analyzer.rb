@@ -1,4 +1,6 @@
-require 'gherkin/parser/parser'
+require 'gherkin/parser'
+require 'gherkin/pickles/compiler'
+require 'stepdown/scenario'
 
 module Stepdown
   class Analyzer
@@ -27,14 +29,14 @@ module Stepdown
     end
 
     def process_feature_files(feature_files)
-      listener = Stepdown::FeatureParser.new(instance)
-
-      parser = Gherkin::Parser::Parser.new(listener, true, 'root')
-
+      scenarios = []
+      parser = Gherkin::Parser.new
       feature_files.each do |feature_file|
-        parser.parse(File.read(feature_file), feature_file, 0)
+        gherkin_document = parser.parse(File.read(feature_file))
+        pickles = Gherkin::Pickles::Compiler.new.compile(gherkin_document, feature_file)
+        scenarios << pickles.map{ |pickle| scenario_from_pickle(pickle) }
       end
-      listener.scenarios
+      scenarios.flatten!
     end
 
     def reporter(type, stats)
@@ -47,7 +49,6 @@ module Stepdown
           Stepdown::Reporter.new(stats)
       end
     end
-
 
     def instance
       @instance ||= begin
@@ -69,6 +70,15 @@ module Stepdown
     def step_files
       return @step_files if @step_files
       @step_files = Dir.glob(@steps_dir + '/**/*.rb')
+    end
+
+    def scenario_from_pickle(pickle)
+      scenario = Scenario.new(pickle[:name])
+      pickle[:steps].each do |step|
+        matched_step = instance.line_matches(step[:text])
+        scenario.add_step(matched_step) if matched_step
+      end
+      scenario
     end
   end
 end

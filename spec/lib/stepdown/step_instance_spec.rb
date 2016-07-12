@@ -70,13 +70,13 @@ describe Stepdown::StepInstance do
     end
 
     it 'defines methods for all valid code words' do
-      Gherkin::I18n.code_keywords.each do |code|
+      @step_instance.code_keywords.each do |code|
         expect do
           @step_instance.send(code, @regex)
         end.to_not raise_error
       end
 
-      expect(Gherkin::I18n.code_keywords.count).to eq(@step_instance.step_collection.count)
+      expect(@step_instance.code_keywords.count).to eq(@step_instance.step_collection.count)
     end
   end
 end
